@@ -1,28 +1,62 @@
 package com.bank.web.user.service;
 
-import com.bank.domain.user.UserEnum;
-import com.bank.web.user.dto.UserReqDto;
+import com.bank.domain.user.User;
+import com.bank.dummy.DummyObject;
 import com.bank.web.user.dto.UserReqDto.JoinReqDto;
+import com.bank.web.user.dto.UserRespDto;
+import com.bank.web.user.dto.UserRespDto.JoinRespDto;
+import com.bank.web.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.annotation.Rollback;
 
-@SpringBootTest
-class UserServiceTest {
+import java.time.LocalDateTime;
+import java.util.Optional;
 
-    @Autowired
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest extends DummyObject {
+
+    @InjectMocks // 목 객체를 injection받을 객체
     private UserService userService;
+
+    @Mock // 목 객체로 만들 객체
+    private UserRepository userRepository;
+
+    @Spy
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Test
     @DisplayName("회원가입 테스트")
-    @Rollback(value = false)
     void signup_test() {
+
+        // given
         JoinReqDto joinReqDto = new JoinReqDto();
-        joinReqDto.setUsername("test");
-        joinReqDto.setFullname("fullTest");
+        joinReqDto.setUsername("ssar");
         joinReqDto.setPassword("1234");
-        userService.signUp(joinReqDto);
+        joinReqDto.setEmail("ssar@nate.com");
+        joinReqDto.setFullname("쌀");
+
+        // stub1(가설)
+        when(userRepository.findByUsername(any())).thenReturn(Optional.empty()); // 중복 체크를 pass를 위해서
+        // when(userRepository.findByUsername(any())).thenReturn(Optional.of(new User())); // 중복 체크를 pass를 위해서
+
+
+        // stub2
+        User saar = newMockUser(1L, "ssar", "쌀");
+        when(userRepository.save(any())).thenReturn(saar);
+        // when
+        JoinRespDto joinRespDto = userService.signUp(joinReqDto);
+        System.out.println("테스트 =>" + joinRespDto);
+        // then
     }
 }

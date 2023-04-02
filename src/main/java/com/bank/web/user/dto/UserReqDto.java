@@ -6,12 +6,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 
 public class UserReqDto {
     @Setter
     @Getter
     public static class JoinReqDto {
        @NotEmpty(message = "username은 필수입니다")
+       @Pattern(regexp = "", message = "영문/")
        private String username;
 
        @NotEmpty(message = "password는 필수입니다")

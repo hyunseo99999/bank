@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "user_tb")
 public class User {
 
@@ -44,14 +43,18 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updateAt;
 
-    @Builder
+    public User() {
+    }
 
-    public User(Long id, String username, String password, String fullName, String email, UserEnum role) {
+    @Builder
+    public User(Long id, String username, String password, String fullName, String email, UserEnum role, LocalDateTime createAt, LocalDateTime updateAt) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.email = email;
         this.role = role;
+        this.createAt = createAt;
+        this.updateAt = updateAt;
     }
 }
