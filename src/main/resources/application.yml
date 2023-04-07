@@ -1,5 +1,5 @@
 server:
-  port: 9000
+  port: 9001
 
   servlet:
     encoding:
@@ -7,6 +7,12 @@ server:
       force: true
 
 spring:
+  # web:
+  #  resources:
+  #    add-mapping: true
+  mvc:
+    throw-exception-if-no-handler-found: true
+    # dispatch-options-request: false
   h2:
     console:
       enabled: true

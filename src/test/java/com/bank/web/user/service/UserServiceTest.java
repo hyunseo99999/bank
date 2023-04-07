@@ -6,6 +6,7 @@ import com.bank.web.user.dto.UserReqDto.JoinReqDto;
 import com.bank.web.user.dto.UserRespDto;
 import com.bank.web.user.dto.UserRespDto.JoinRespDto;
 import com.bank.web.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,8 @@ import org.springframework.test.annotation.Rollback;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +38,31 @@ class UserServiceTest extends DummyObject {
     @Spy
     private BCryptPasswordEncoder passwordEncoder;
 
+
+    @BeforeEach
+    void initSetting() {
+        dataSetting();
+    }
+
+    private void dataSetting() {
+      userRepository.save(newUser("ssar", "쌀"));
+    }
+
+    @Test
+    @DisplayName("회원가입 이름 중복 테스트")
+    void signup_usernameDupli_test() {
+
+        // given
+        String username = "ssar";
+
+        // when
+        Optional<User> userOP = userRepository.findByUsername(username);
+
+        // then
+        assertTrue(userOP.isPresent());
+        assertThat(userOP.get().getUsername()).isEqualTo("ssar");
+    }
+
     @Test
     @DisplayName("회원가입 테스트")
     void signup_test() {
@@ -47,8 +75,8 @@ class UserServiceTest extends DummyObject {
         joinReqDto.setFullname("쌀");
 
         // stub1(가설)
-        when(userRepository.findByUsername(any())).thenReturn(Optional.empty()); // 중복 체크를 pass를 위해서
-        // when(userRepository.findByUsername(any())).thenReturn(Optional.of(new User())); // 중복 체크를 pass를 위해서
+        // when(userRepository.findByUsername(any())).thenReturn(Optional.empty()); // 중복 체크를 pass를 위해서
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(new User())); // 중복 체크를 pass를 위해서
 
 
         // stub2

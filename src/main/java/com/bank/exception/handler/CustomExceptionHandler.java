@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
 public class CustomExceptionHandler {
@@ -26,5 +27,11 @@ public class CustomExceptionHandler {
         log.error(e.getMessage());
         return new ResponseEntity<>(new ResponseDto(-1, e.getMessage(), e.getErrorMap()), HttpStatus.BAD_REQUEST);
     }
+
+    // 404예외처리 핸들러
+   	@ExceptionHandler(NoHandlerFoundException.class)
+   	public ResponseEntity<?> handle404(NoHandlerFoundException e){
+        return new ResponseEntity<>(new ResponseDto(-1, "404 페이지", null), HttpStatus.NOT_FOUND);
+   	}
 
 }
