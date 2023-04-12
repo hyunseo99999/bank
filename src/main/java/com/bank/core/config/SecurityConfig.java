@@ -1,15 +1,23 @@
 package com.bank.core.config;
 
 import com.bank.common.ResponseUtil;
+import com.bank.core.filter.JwtAuthenticationFilter;
+import com.bank.core.filter.JwtAuthorizationFilter;
 import com.bank.domain.user.UserEnum;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,6 +33,17 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
+    public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+            http.addFilter(new JwtAuthenticationFilter(authenticationManager));
+            http.addFilter(new JwtAuthorizationFilter(authenticationManager));
+            super.configure(http);
+        }
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.headers().frameOptions().disable();
@@ -34,10 +53,15 @@ public class SecurityConfig {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.httpBasic().disable();
 
-        http.exceptionHandling().authenticationEntryPoint((request, response, authException) -> {
-            ResponseUtil.unAuthentication(response, "로그인을 진행해 주세요.");
-        });
+        http.apply(new CustomSecurityFilterManager());
 
+        http.exceptionHandling().accessDeniedHandler(((request, response, accessDeniedException) -> {
+            ResponseUtil.fail(response, "권한이 없습니다", HttpStatus.FORBIDDEN);
+        }));
+
+        http.exceptionHandling().authenticationEntryPoint((request, response, authException) -> {
+            ResponseUtil.fail(response, "로그인을 진행해 주세요.", HttpStatus.UNAUTHORIZED);
+        });
 
         /**
          * authenticated: 인증된 유저만 접근을 허

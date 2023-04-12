@@ -29,9 +29,7 @@ import static com.bank.web.user.dto.UserRespDto.*;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserController {
-
     private final UserService userService;
-
     @PostMapping("/join")
     public ResponseEntity<?> join(@RequestBody @Valid JoinReqDto joinReqDto, BindingResult bindingResult) {
         JoinRespDto joinRespDto = userService.signUp(joinReqDto);
