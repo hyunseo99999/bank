@@ -11,14 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 import static com.bank.web.account.dto.AccountRespDto.*;
+import static com.bank.web.account.service.AccountService.*;
 
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -31,5 +29,11 @@ public class AccountController {
         AccountSaveRespDto accountSaveRespDto = accountService.save(accountSaveReqDto, loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌등록 성공", accountSaveRespDto), HttpStatus.CREATED);
     }
+
+    @GetMapping("/s/account/login-user")
+    public ResponseEntity<?> findAccountByUser(@AuthenticationPrincipal LoginUser user) {
+        AccountListRespDto findAccountByUser = accountService.findAccountByUser(user.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌번호 조회", findAccountByUser), HttpStatus.OK);
+   }
 
 }
