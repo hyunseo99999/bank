@@ -4,6 +4,8 @@ import com.bank.domain.account.Account;
 import com.bank.domain.user.User;
 import com.bank.exception.handler.ex.CustomApiException;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
+import com.bank.web.account.dto.AccountRespDto;
+import com.bank.web.account.dto.AccountRespDto.AccountListRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountSaveRespDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.user.repository.UserRepository;
@@ -47,30 +49,18 @@ public class AccountService {
         return new AccountListRespDto(user, accountList);
     }
 
+    @Transactional
+    public void deleteByAccountAndUser(Long number, Long userId) {
+        Account findAccount = accountRepository.findByNumber(number).orElseThrow(
+                () -> new CustomApiException("계좌를 찾을 수 없습니다.")
+        );
 
-    @Getter @Setter
-    public static class AccountListRespDto {
-        private String fullName;
-        private List<AccountDto> accounts = new ArrayList<>();
+        findAccount.checkOwner(userId);
 
-        public AccountListRespDto(User user, List<Account> accounts) {
-            this.fullName = user.getFullName();
-            this.accounts = accounts.stream().map(AccountDto::new).collect(Collectors.toList());
-        }
-
-        @Getter @Setter
-        public class AccountDto {
-            private Long id;
-            private Long number;
-            private Long balance;
-
-            public AccountDto(Account account) {
-                this.id = account.getId();
-                this.number = account.getNumber();
-                this.balance = account.getBalance();
-            }
-        }
-
+        accountRepository.deleteById(findAccount.getId());
     }
+
+
+
 
 }

@@ -67,7 +67,13 @@ class AccountServiceTest extends DummyObject {
 
 
         assertThat(ssarAcount.getNumber()).isEqualTo(1111L);
-
     }
 
+    @Test
+    @DisplayName("계좌 삭제")
+    void account_delete_test() {
+       Long number = 1111L;
+       Long userId = 1L;
+
+    }
 }
