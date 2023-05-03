@@ -39,11 +39,11 @@ public class DummyObject {
                 .build();
     }
 
-    public Account newAccount(Long number, Long balance, User user) {
+    public Account newAccount(Long number, User user) {
         return Account.builder()
                 .number(number)
                 .password(1234L)
-                .balance(balance)
+                .balance(1000L)
                 .user(user)
                 .build();
     }

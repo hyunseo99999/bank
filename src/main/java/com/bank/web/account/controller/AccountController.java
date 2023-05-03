@@ -42,7 +42,7 @@ public class AccountController {
      * @param number
      * @return
      */
-    @DeleteMapping("/s/account/${number}")
+    @DeleteMapping("/s/account/{number}")
     public ResponseEntity<?> deleteAccountByUser(@PathVariable Long number, @AuthenticationPrincipal LoginUser loginUser) {
         accountService.deleteByAccountAndUser(number, loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌번호 삭제 성공", null), HttpStatus.OK);

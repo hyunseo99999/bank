@@ -1,5 +1,6 @@
 package com.bank.web.account.controller;
 
+import com.bank.domain.account.Account;
 import com.bank.domain.user.User;
 import com.bank.dummy.DummyObject;
 import com.bank.web.account.dto.AccountReqDto;
@@ -8,6 +9,7 @@ import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -28,7 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.MOCK;
 import static org.springframework.http.RequestEntity.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 @Transactional
 @ActiveProfiles("local")
 @AutoConfigureMockMvc
@@ -49,15 +54,21 @@ class AccountControllerTest extends DummyObject {
 
     @BeforeEach
     void setUp() {
-        User user = userRepository.save(newUser("ssar", "쌀"));
-        accountRepository.save(newAccount(9999L, 1000L, user));
+        User ssar = userRepository.save(newUser("ssar", "쌀"));
+        User cos = userRepository.save(newUser("cos", "코스,"));
+        User love = userRepository.save(newUser("love", "러브"));
+        User admin = userRepository.save(newUser("admin", "관리자"));
+
+        Account ssarAccount1 = accountRepository.save(newAccount(1111L, ssar));
+        Account cosAccount = accountRepository.save(newAccount(2222L, cos));
+        Account loveAccount = accountRepository.save(newAccount(3333L, love));
+        Account ssarAccount2 = accountRepository.save(newAccount(4444L, ssar));
+
     }
 
     @WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @Test
     void saveAccount_test() throws Exception {
-
-
         AccountSaveReqDto accountSaveReqDto = new AccountSaveReqDto();
         accountSaveReqDto.setNumber(9999L);
         accountSaveReqDto.setPassword(1234L);
@@ -82,6 +93,23 @@ class AccountControllerTest extends DummyObject {
 
         String responseBody = resultActions.andReturn().getResponse().getContentAsString();
         System.out.println("테스트 ==> " + responseBody);
+    }
+
+    @WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @Test
+    void deleteAccountUser_test() throws Exception {
+
+        // given
+        Long accountNumber = 1111L;
+
+        // when
+        ResultActions resultActions = mvc
+                        .perform(delete("/api/s/account/" + accountNumber));
+        String responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        log.debug("디버그 : " + responseBody);
+
+        // then
+        resultActions.andExpect(status().isOk());
     }
 
 
