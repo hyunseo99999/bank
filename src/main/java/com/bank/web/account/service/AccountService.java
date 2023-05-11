@@ -88,7 +88,7 @@ public class AccountService {
         );
 
         // 입금 (해당 계좌 balance 조정 - update문 - 더티체크)
-        findAccount.depoist(accountDepositReqDto.getAmount());
+        findAccount.deposit(accountDepositReqDto.getAmount());
 
         Transaction transaction = Transaction
                 .builder()

@@ -1,6 +1,8 @@
 package com.bank.dummy;
 
 import com.bank.domain.account.Account;
+import com.bank.domain.transaction.Transaction;
+import com.bank.domain.transaction.TransactionEnum;
 import com.bank.domain.user.User;
 import com.bank.domain.user.UserEnum;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +60,27 @@ public class DummyObject {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    // 계좌 1111L 1000원
+    // 입금 트랜잭션 -> 계좌 1100원 변경 -> 입금 트랙잭션 히스토리가 생성되어야 함.
+    protected static Transaction newMockDepositTransaction(Long id, Account account) {
+        account.deposit(100L);
+        Transaction transaction = Transaction.builder()
+                .id(id)
+                .withdrawAccount(null)
+                .depositAccount(account)
+                .withdrawAccountBalance(null)
+                .depositAccountBalance(account.getBalance())
+                .amount(100L)
+                .gubun(TransactionEnum.DEPOSIT)
+                .sender("ATM")
+                .receiver(account.getNumber() + "")
+                .tel("01088887777")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        return transaction;
     }
 
 }

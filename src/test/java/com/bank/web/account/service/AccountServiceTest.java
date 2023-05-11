@@ -1,12 +1,17 @@
 package com.bank.web.account.service;
 
 import com.bank.domain.account.Account;
+import com.bank.domain.transaction.Transaction;
 import com.bank.domain.user.User;
 import com.bank.dummy.DummyObject;
 import com.bank.exception.handler.ex.CustomApiException;
+import com.bank.web.account.dto.AccountReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
+import com.bank.web.account.dto.AccountRespDto;
+import com.bank.web.account.dto.AccountRespDto.AccountDepositRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountSaveRespDto;
 import com.bank.web.account.repository.AccountRepository;
+import com.bank.web.transaction.repository.TransactionRepository;
 import com.bank.web.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.persistence.EntityManager;
 import java.util.Optional;
 
+import static com.bank.web.account.dto.AccountReqDto.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,6 +47,9 @@ class AccountServiceTest extends DummyObject {
 
     @Mock
     private AccountRepository accountRepository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
 
     @Spy
     private ObjectMapper mapper;
@@ -112,5 +121,40 @@ class AccountServiceTest extends DummyObject {
 
        // then
        fail("예외 발생 안함");
+    }
+
+    @Test
+    @DisplayName("계좌 이체")
+    void accountDeposit() {
+        AccountDepositReqDto accountDepositReqDto = new AccountDepositReqDto();
+
+        Long number = 1111L;
+        Long amount = 100L;
+
+        accountDepositReqDto.setNumber(number);
+        accountDepositReqDto.setAmount(amount);
+        accountDepositReqDto.setGubun("DEPOSIT");
+        accountDepositReqDto.setTel("01012345678");
+
+        // stub 1L
+        User ssar = newMockUser(1L, "ssar", "쌀"); // 실행됨
+        Account ssarAccount1 = newMockAccount(1L, 1111L, 1000L, ssar); // 실행됨 - ssarAccount1 -> 1000원
+        when(accountRepository.findByNumber(any())).thenReturn(Optional.of(ssarAccount1)); // 실행안됨 -> service호출후 실행됨 ->
+        // 1100원
+        // stub 2 (스텁이 진행될 때 마다 연관된 객체는 새로 만들어서 주입하기 - 타이밍 때문에 꼬인다)
+        Account ssarAccount2 = newMockAccount(1L, 1111L, 1000L, ssar); // 실행됨 - ssarAccount1 -> 1000원
+        Transaction transaction = newMockDepositTransaction(1L, ssarAccount2);
+        when(transactionRepository.save(any())).thenReturn(transaction); // 실행안됨
+
+        // when
+        AccountDepositRespDto accountDepositRespDto = accountService.insertAccount(accountDepositReqDto);
+        System.out.println("테스트 : 트랜잭션 입금계좌 잔액 : " + accountDepositRespDto.getTransaction().getDepositAccountBalance());
+        System.out.println("테스트 : 계좌쪽 잔액 : " + ssarAccount1.getBalance());
+        System.out.println("테스트 : 계좌쪽 잔액 : " + ssarAccount2.getBalance());
+
+        // then
+        assertThat(ssarAccount1.getBalance()).isEqualTo(1100L);
+        assertThat(accountDepositRespDto.getTransaction().getDepositAccountBalance()).isEqualTo(1100L);
+
     }
 }

@@ -60,7 +60,7 @@ public class Account {
         }
     }
 
-    public void depoist(Long amount) {
+    public void deposit(Long amount) {
         balance = balance + amount;
     }
 }
