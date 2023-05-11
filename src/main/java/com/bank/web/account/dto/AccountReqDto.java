@@ -5,9 +5,7 @@ import com.bank.domain.user.User;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 public class AccountReqDto {
 
@@ -31,5 +29,23 @@ public class AccountReqDto {
                     .user(user)
                     .build();
         }
+    }
+
+    @Getter @Setter
+    public static class AccountDepositReqDto {
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long number;
+
+        @NotNull
+        private Long amount;
+
+        @NotEmpty
+        @Pattern(regexp = "^(DEPOSIT)$")
+        private String gubun;
+
+        @NotEmpty
+        @Pattern(regexp = "^[0-9]{3}[0-9]{4}[0-9]{4}")
+        private String tel;
     }
 }

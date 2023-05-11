@@ -2,17 +2,19 @@ package com.bank.web.account.service;
 
 import com.bank.domain.account.Account;
 import com.bank.domain.transaction.Transaction;
+import com.bank.domain.transaction.TransactionEnum;
 import com.bank.domain.user.User;
 import com.bank.exception.handler.ex.CustomApiException;
-import com.bank.util.DateUtil;
+import com.bank.web.account.dto.AccountReqDto;
+import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
 import com.bank.web.account.dto.AccountRespDto;
+import com.bank.web.account.dto.AccountRespDto.AccountDepositRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountListRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountSaveRespDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.transaction.repository.TransactionRepository;
 import com.bank.web.user.repository.UserRepository;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,10 +25,8 @@ import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,9 +72,11 @@ public class AccountService {
 
     /**
      * 계좌 입금
+     *
+     * @return
      */
     @Transactional
-    public void insertAccount(AccountDepositReqDto accountDepositReqDto) {
+    public AccountDepositRespDto insertAccount(AccountDepositReqDto accountDepositReqDto) {
         // 0원 이상만 입금 가능
         if (accountDepositReqDto.getAmount() <= 0L) {
             throw new CustomApiException("0원 이하는 입금할 수 없습니다.");
@@ -95,74 +97,13 @@ public class AccountService {
                 .depositAccountBalance(findAccount.getBalance())
                 .withdrawAccountBalance(null)
                 .amount(accountDepositReqDto.getAmount())
+                .gubun(TransactionEnum.DEPOSIT)
                 .sender("ATM")
                 .receiver(findAccount.getNumber() + "")
                 .tel(accountDepositReqDto.getTel())
                 .build();
 
         Transaction resultTransaction = transactionRepository.save(transaction);
-
-
-
-
+        return new AccountDepositRespDto(findAccount, resultTransaction);
     }
-
-    @Getter @Setter
-    public static class AccountDepositRespDto {
-        private Long id;
-        private Long number;
-        private TransactionDto transaction;
-
-        public AccountDepositRespDto(Account account, Transaction transaction) {
-          this.id = account.getId();
-          this.number = account.getNumber();
-          this.transaction = new TransactionDto(transaction);
-      }
-        @Getter
-        @Setter
-        public class TransactionDto {
-             private Long id;
-             private String gubun; // 입금
-             private String sender; // ATM
-             private String receiver;
-             private Long amount;
-             @JsonIgnore
-             private Long depositAccountBalance;
-             private String tel;
-             private String createdAt;
-
-             public TransactionDto(Transaction transaction) {
-                 this.id = transaction.getId();
-                 this.gubun = transaction.getGubun().getValue();
-                 this.sender = transaction.getSender();
-                 this.receiver = transaction.getReceiver();
-                 this.amount = transaction.getAmount();
-                 this.depositAccountBalance = transaction.getDepositAccountBalance();
-                 this.tel = transaction.getTel();
-                 this.createdAt = DateUtil.toStringFormat(transaction.getCreatedAt());
-             }
-         }
-    }
-
-    @Getter @Setter
-    public static class AccountDepositReqDto {
-        @NotNull
-        @Digits(integer = 4, fraction = 4)
-        private Long number;
-
-        @NotNull
-        private Long amount;
-
-        @NotEmpty
-        @Pattern(regexp = "^(DEPOSIT)$")
-        private String gubun;
-
-        @NotEmpty
-        @Pattern(regexp = "^[0-9]{3}[0-9]{4}[0-9]{4}")
-        private String tel;
-    }
-
-
-
-
 }

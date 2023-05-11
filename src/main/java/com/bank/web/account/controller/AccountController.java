@@ -2,6 +2,7 @@ package com.bank.web.account.controller;
 
 import com.bank.core.auth.LoginUser;
 import com.bank.web.account.dto.AccountReqDto;
+import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
 import com.bank.web.account.dto.AccountRespDto;
 import com.bank.web.account.service.AccountService;
@@ -46,6 +47,13 @@ public class AccountController {
     public ResponseEntity<?> deleteAccountByUser(@PathVariable Long number, @AuthenticationPrincipal LoginUser loginUser) {
         accountService.deleteByAccountAndUser(number, loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌번호 삭제 성공", null), HttpStatus.OK);
+    }
+
+    @PostMapping("/account/deposit")
+    public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountDepositReqDto accountDepositReqDto,
+                                            BindingResult bindingResult) {
+        AccountDepositRespDto accountDepositRespDto = accountService.insertAccount(accountDepositReqDto);
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 입금 완료", accountDepositRespDto), HttpStatus.CREATED);
     }
 
 }
