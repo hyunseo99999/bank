@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 9001
   servlet:
     encoding:
       charset: utf-8
@@ -7,16 +7,16 @@ server:
 
 spring:
   datasource:
-    url: jdbc.h2:mem:test;NONE=MySQL
-    driver-class-name: org.h2.Driver
+    url: jdbc:h2:tcp://localhost/~/jpadata
     username: sa
+    driver-class-name: org.h2.Driver
   h2:
     console:
       enabled: true
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
     properties:
       hibernate:
         default_batch_fetch_size: 100

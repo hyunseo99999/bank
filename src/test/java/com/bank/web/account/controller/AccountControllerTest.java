@@ -4,6 +4,7 @@ import com.bank.domain.account.Account;
 import com.bank.domain.user.User;
 import com.bank.dummy.DummyObject;
 import com.bank.web.account.dto.AccountReqDto;
+import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.user.repository.UserRepository;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +114,24 @@ class AccountControllerTest extends DummyObject {
         resultActions.andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("계좌입금")
+    public void depositAccount_test() throws Exception {
+        AccountDepositReqDto accountDepositReqDto = new AccountDepositReqDto();
+        accountDepositReqDto.setNumber(1111L);
+        accountDepositReqDto.setAmount(100L);
+        accountDepositReqDto.setGubun("DEPOSIT");
+        accountDepositReqDto.setTel("01012345678");
 
+        String requestBody = mapper.writeValueAsString(accountDepositReqDto);
+        ResultActions resultActions = mvc.perform(MockMvcRequestBuilders.post("/api/account/deposit")
+                .content(requestBody)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        String responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        log.debug("디버그 : " + responseBody);
+
+        resultActions.andExpect(status().isCreated());
+    }
 
 }

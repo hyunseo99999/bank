@@ -5,26 +5,23 @@ import com.bank.domain.transaction.Transaction;
 import com.bank.domain.transaction.TransactionEnum;
 import com.bank.domain.user.User;
 import com.bank.exception.handler.ex.CustomApiException;
-import com.bank.web.account.dto.AccountReqDto;
+import com.bank.util.DateUtil;
 import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
-import com.bank.web.account.dto.AccountRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountDepositRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountListRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountSaveRespDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.transaction.repository.TransactionRepository;
 import com.bank.web.user.repository.UserRepository;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -105,5 +102,94 @@ public class AccountService {
 
         Transaction resultTransaction = transactionRepository.save(transaction);
         return new AccountDepositRespDto(findAccount, resultTransaction);
+    }
+
+    @Transactional
+    public void 계좌출금(AccountWithdrawReqDto accountWithdrawReqDto, Long userId) {
+        if (accountWithdrawReqDto.getAmount() <= 0L) {
+            throw new CustomApiException("0원 이하는 금액을 출금할 수 없습니다.");
+        }
+
+        // 출금 계좌 확인
+        Account withdrawAccountPS = accountRepository.findByNumber(accountWithdrawReqDto.getNumber())
+                .orElseThrow(() -> new CustomApiException("계좌를 찾을 수 없습니다."));
+
+
+        // 출금 소유자 확인(로그인한 사람과 동일한지)
+        withdrawAccountPS.checkOwner(userId);
+
+        // 출금계좌 비밀번호 확인
+        withdrawAccountPS.checkSamePassword(accountWithdrawReqDto.getPassword());
+        // 출금계좌 잔액 확인
+        withdrawAccountPS.checkBalance(accountWithdrawReqDto.getAmount());
+        // 출금하기
+        withdrawAccountPS.withdraw(accountWithdrawReqDto.getAmount());
+        // 거래내역 남기기
+        Transaction transaction = Transaction.builder()
+                .withdrawAccount(withdrawAccountPS)
+                .depositAccount(null)
+                .withdrawAccountBalance(withdrawAccountPS.getBalance())
+                .depositAccountBalance(null)
+                .amount(accountWithdrawReqDto.getAmount())
+                .gubun(TransactionEnum.WITHDRAW)
+                .sender(accountWithdrawReqDto.getNumber() + "")
+                .receiver("ATM")
+                .build();
+        // DTO 응답하기
+
+
+    }
+
+    @Getter @Setter
+    public static class AccountWithdrawReqDto {
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long number;
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long password;
+
+        @NotNull
+        private Long amount;
+
+        @NotEmpty
+        @Pattern(regexp = "^(DEPOSIT)$")
+        private String gubun;
+    }
+
+    @Getter @Setter
+    public static class AccountWithdrawRespDto {
+        private Long id;
+        private Long number;
+        private Long balance;
+        private TransactionDto transaction;
+
+        public AccountWithdrawRespDto(Account account, Transaction transaction) {
+            this.id = account.getId();
+            this.number = account.getNumber();
+            this.balance = account.getBalance();
+            this.transaction = new TransactionDto(transaction);
+        }
+
+        @Getter
+        @Setter
+        public class TransactionDto {
+            private Long id;
+            private String gubun; // 입금
+            private String sender; // ATM
+            private String receiver;
+            private Long amount;
+
+            private String createdAt;
+            public TransactionDto(Transaction transaction) {
+                this.id = transaction.getId();
+                this.gubun = transaction.getGubun().getValue();
+                this.sender = transaction.getSender();
+                this.receiver = transaction.getReceiver();
+                this.amount = transaction.getAmount();
+                this.createdAt = DateUtil.toStringFormat(transaction.getCreatedAt());
+            }
+        }
     }
 }
