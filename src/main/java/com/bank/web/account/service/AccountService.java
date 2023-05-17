@@ -6,11 +6,15 @@ import com.bank.domain.transaction.TransactionEnum;
 import com.bank.domain.user.User;
 import com.bank.exception.handler.ex.CustomApiException;
 import com.bank.util.DateUtil;
+import com.bank.web.account.dto.AccountReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
+import com.bank.web.account.dto.AccountReqDto.AccountWithdrawReqDto;
+import com.bank.web.account.dto.AccountRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountDepositRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountListRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountSaveRespDto;
+import com.bank.web.account.dto.AccountRespDto.AccountWithdrawRespDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.transaction.repository.TransactionRepository;
 import com.bank.web.user.repository.UserRepository;
@@ -105,7 +109,7 @@ public class AccountService {
     }
 
     @Transactional
-    public void 계좌출금(AccountWithdrawReqDto accountWithdrawReqDto, Long userId) {
+    public AccountWithdrawRespDto accountWithDraw(AccountWithdrawReqDto accountWithdrawReqDto, Long userId) {
         if (accountWithdrawReqDto.getAmount() <= 0L) {
             throw new CustomApiException("0원 이하는 금액을 출금할 수 없습니다.");
         }
@@ -135,61 +139,8 @@ public class AccountService {
                 .sender(accountWithdrawReqDto.getNumber() + "")
                 .receiver("ATM")
                 .build();
+        transactionRepository.save(transaction);
         // DTO 응답하기
-
-
-    }
-
-    @Getter @Setter
-    public static class AccountWithdrawReqDto {
-        @NotNull
-        @Digits(integer = 4, fraction = 4)
-        private Long number;
-
-        @NotNull
-        @Digits(integer = 4, fraction = 4)
-        private Long password;
-
-        @NotNull
-        private Long amount;
-
-        @NotEmpty
-        @Pattern(regexp = "^(DEPOSIT)$")
-        private String gubun;
-    }
-
-    @Getter @Setter
-    public static class AccountWithdrawRespDto {
-        private Long id;
-        private Long number;
-        private Long balance;
-        private TransactionDto transaction;
-
-        public AccountWithdrawRespDto(Account account, Transaction transaction) {
-            this.id = account.getId();
-            this.number = account.getNumber();
-            this.balance = account.getBalance();
-            this.transaction = new TransactionDto(transaction);
-        }
-
-        @Getter
-        @Setter
-        public class TransactionDto {
-            private Long id;
-            private String gubun; // 입금
-            private String sender; // ATM
-            private String receiver;
-            private Long amount;
-
-            private String createdAt;
-            public TransactionDto(Transaction transaction) {
-                this.id = transaction.getId();
-                this.gubun = transaction.getGubun().getValue();
-                this.sender = transaction.getSender();
-                this.receiver = transaction.getReceiver();
-                this.amount = transaction.getAmount();
-                this.createdAt = DateUtil.toStringFormat(transaction.getCreatedAt());
-            }
-        }
+        return new AccountWithdrawRespDto(withdrawAccountPS, transaction);
     }
 }
