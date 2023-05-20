@@ -10,6 +10,7 @@ import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
 import com.bank.web.account.dto.AccountRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountDepositRespDto;
 import com.bank.web.account.dto.AccountRespDto.AccountSaveRespDto;
+import com.bank.web.account.dto.AccountRespDto.AccountTransferRespDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.transaction.repository.TransactionRepository;
 import com.bank.web.user.repository.UserRepository;
@@ -24,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.util.Optional;
@@ -155,6 +157,48 @@ class AccountServiceTest extends DummyObject {
         // then
         assertThat(ssarAccount1.getBalance()).isEqualTo(1100L);
         assertThat(accountDepositRespDto.getTransaction().getDepositAccountBalance()).isEqualTo(1100L);
+    }
+
+    @Test
+    public void 계좌이체_test() throws Exception {
+        Long userId = 1L;
+        AccountTransferReqDto accountTransferReqDto = new AccountTransferReqDto();
+        accountTransferReqDto.setWithdrawNumber(1111L);
+        accountTransferReqDto.setDepositNumber(2222L);
+        accountTransferReqDto.setWithdrawPassword(1234L);
+        accountTransferReqDto.setAmount(100L);
+        accountTransferReqDto.setGubun("TRANSFER");
+
+        User ssar = newMockUser(1L, "ssar", "쌀");
+        User cost = newMockUser(1L, "cost", "코스트");
+        Account withdrawAccount = newMockAccount(1L, 1111L, 1000L, ssar);
+        Account depositAccount = newMockAccount(2L, 2222L, 1000L, cost);
+
+        // 출금계좌와 입금계좌가 동일하면 안됨
+        if (accountTransferReqDto.getWithdrawNumber().longValue() == accountTransferReqDto.getDepositNumber().longValue()) {
+            throw new CustomApiException("입출금계좌가 동일할 수 없습니다.");
+        }
+
+
+        if (accountTransferReqDto.getAmount() <= 0L) {
+            throw new CustomApiException("0원 이하는 금액을 출금할 수 없습니다.");
+        }
+
+        // 출금 소유자 확인(로그인한 사람과 동일한지)
+        withdrawAccount.checkOwner(userId);
+
+        // 출금계좌 비밀번호 확인
+        withdrawAccount.checkSamePassword(accountTransferReqDto.getWithdrawPassword());
+
+        // 출금계좌 잔액 확인
+        withdrawAccount.checkBalance(accountTransferReqDto.getAmount());
+
+        // 이체하기
+        withdrawAccount.withdraw(accountTransferReqDto.getAmount());
+        depositAccount.deposit(accountTransferReqDto.getAmount());
+
+        assertThat(withdrawAccount.getBalance()).isEqualTo(900L);
+        assertThat(depositAccount.getBalance()).isEqualTo(1100L);
 
     }
 }

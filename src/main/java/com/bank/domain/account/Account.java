@@ -71,7 +71,7 @@ public class Account {
     }
 
     public void checkBalance(Long amount) {
-        if (this.balance < amount) {
+        if (this.balance.longValue() < amount.longValue()) {
             throw new CustomApiException("계좌 잔액이 부족합니다.");
         }
     }

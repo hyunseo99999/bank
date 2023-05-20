@@ -122,4 +122,41 @@ public class AccountRespDto {
             }
         }
     }
+
+    @Getter @Setter
+    public static class AccountTransferRespDto {
+        private Long id;
+        private Long number;
+        private Long balance;
+        private TransactionDto transaction;
+
+        public AccountTransferRespDto(Account account, Transaction transaction) {
+            this.id = account.getId();
+            this.number = account.getNumber();
+            this.balance = account.getBalance();
+            this.transaction = new TransactionDto(transaction);
+        }
+
+        @Getter
+        @Setter
+        public class TransactionDto {
+            private Long id;
+            private String gubun; // 입금
+            private String sender; // ATM
+            private String receiver;
+            private Long amount;
+            @JsonIgnore
+            private Long depositAccountBalance;
+            private String createdAt;
+            public TransactionDto(Transaction transaction) {
+                this.id = transaction.getId();
+                this.gubun = transaction.getGubun().getValue();
+                this.sender = transaction.getSender();
+                this.receiver = transaction.getReceiver();
+                this.amount = transaction.getAmount();
+                this.depositAccountBalance = transaction.getDepositAccountBalance();
+                this.createdAt = DateUtil.toStringFormat(transaction.getCreatedAt());
+            }
+        }
+    }
 }
