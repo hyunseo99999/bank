@@ -4,6 +4,7 @@ import com.bank.core.auth.LoginUser;
 import com.bank.web.account.dto.AccountReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
+import com.bank.web.account.dto.AccountReqDto.AccountTransferReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountWithdrawReqDto;
 import com.bank.web.account.dto.AccountRespDto;
 import com.bank.web.account.service.AccountService;
@@ -67,4 +68,17 @@ public class AccountController {
         AccountWithdrawRespDto accountWithdrawRespDto = accountService.accountWithDraw(accountWithdrawReqDto, login.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌 출금 완료", accountWithdrawRespDto), HttpStatus.OK);
     }
+
+    /**
+     * 계좌이체
+     */
+    @PostMapping("/s/account/transfer")
+    public ResponseEntity<?> transferAccount(@RequestBody @Valid AccountTransferReqDto accountTransferReqDto
+                                            , BindingResult bindingResult
+                                            , @AuthenticationPrincipal LoginUser login
+    ) {
+        AccountTransferRespDto accountTransferRespDto = accountService.계좌이체(accountTransferReqDto, login.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 이체 완료", accountTransferRespDto), HttpStatus.OK);
+    }
+
 }

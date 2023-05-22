@@ -1,16 +1,19 @@
 package com.bank.web.account.controller;
 
 import com.bank.domain.account.Account;
+import com.bank.domain.transaction.TransactionEnum;
 import com.bank.domain.user.User;
 import com.bank.dummy.DummyObject;
 import com.bank.web.account.dto.AccountReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountDepositReqDto;
 import com.bank.web.account.dto.AccountReqDto.AccountSaveReqDto;
+import com.bank.web.account.dto.AccountReqDto.AccountTransferReqDto;
 import com.bank.web.account.repository.AccountRepository;
 import com.bank.web.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -132,6 +135,28 @@ class AccountControllerTest extends DummyObject {
         log.debug("디버그 : " + responseBody);
 
         resultActions.andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("계좌이체")
+    @WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    public void 계좌이체_test() throws Exception {
+        AccountTransferReqDto accountTransferReqDto = new AccountTransferReqDto();
+        accountTransferReqDto.setWithdrawNumber(1111L);
+        accountTransferReqDto.setDepositNumber(2222L);
+        accountTransferReqDto.setWithdrawPassword(1234L);
+        accountTransferReqDto.setAmount(1000L);
+        accountTransferReqDto.setGubun(TransactionEnum.TRANSFER + "");
+
+        String requestBody = mapper.writeValueAsString(accountTransferReqDto);
+        ResultActions resultActions = mvc.perform(MockMvcRequestBuilders.post("/api/s/account/transfer")
+                .content(requestBody)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        String responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        System.out.println("테스트 : " + responseBody);
+
+        resultActions.andExpect(status().isOk());
     }
 
 }
